@@ -7,10 +7,73 @@
  */
 import type { GlobalThemeOverrides } from 'naive-ui'
 
+/**
+ * Convert an `oklch()` colour to `rgb()`.
+ *
+ * This is NOT optional. Our design tokens are authored in `oklch()`, and Naive
+ * UI's colour library (seemly) cannot parse it — it throws
+ * "Invalid color value oklch(...)" while deriving hover/pressed shades, which
+ * kills the render of every component that does colour maths. NInput renders as
+ * nothing at all, so the login form comes up with no fields.
+ *
+ * Reading the value back through `getComputedStyle` does not help: Chromium
+ * preserves the colour space and hands back `oklch(...)` again. So the
+ * conversion is done here, with the same maths as `scripts/check_contrast.py`
+ * (which is what verifies our contrast ratios), keeping one definition of what
+ * a token actually looks like.
+ */
+const OKLCH = /oklch\(\s*([\d.]+)%?\s+([\d.]+)\s+([\d.]+)\s*(?:\/\s*([\d.]+)%?\s*)?\)/i
+
+function gammaEncode(channel: number): number {
+  return channel <= 0.0031308 ? 12.92 * channel : 1.055 * Math.pow(channel, 1 / 2.4) - 0.055
+}
+
+export function oklchToRgb(value: string): string {
+  const match = OKLCH.exec(value)
+  if (!match) return value
+
+  let lightness = Number(match[1])
+  // `oklch(68.38% ...)` and `oklch(0.6838 ...)` are the same colour.
+  if (value.slice(match.index).includes('%') && lightness > 1.5) lightness /= 100
+  else if (lightness > 1.5) lightness /= 100
+
+  const chroma = Number(match[2])
+  const hue = (Number(match[3]) * Math.PI) / 180
+  const alphaRaw = match[4]
+
+  const a = chroma * Math.cos(hue)
+  const b = chroma * Math.sin(hue)
+
+  const l = Math.pow(lightness + 0.3963377774 * a + 0.2158037573 * b, 3)
+  const m = Math.pow(lightness - 0.1055613458 * a - 0.0638541728 * b, 3)
+  const s = Math.pow(lightness - 0.0894841775 * a - 1.291485548 * b, 3)
+
+  const channels = [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ].map((channel) => Math.round(Math.min(1, Math.max(0, gammaEncode(Math.min(1, Math.max(0, channel))))) * 255))
+
+  if (alphaRaw !== undefined) {
+    const alpha = alphaRaw.includes('%') ? Number(alphaRaw.replace('%', '')) / 100 : Number(alphaRaw)
+    return `rgba(${channels[0]}, ${channels[1]}, ${channels[2]}, ${alpha})`
+  }
+  return `rgb(${channels[0]}, ${channels[1]}, ${channels[2]})`
+}
+
+/** Add an alpha channel to an `rgb()` string (hex-style suffixes do not work). */
+function withAlpha(rgb: string, alpha: number): string {
+  const match = /rgba?\(([^)]+)\)/.exec(rgb)
+  if (!match) return rgb
+  const [r, g, b] = match[1].split(',').map((part) => part.trim())
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 function token(name: string, fallback = ''): string {
   if (typeof window === 'undefined') return fallback
   const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-  return value || fallback
+  if (!value) return fallback
+  return value.includes('oklch') ? oklchToRgb(value) : value
 }
 
 export function buildThemeOverrides(): GlobalThemeOverrides {
@@ -88,7 +151,7 @@ export function buildThemeOverrides(): GlobalThemeOverrides {
       border: `1px solid ${borderStrong}`,
       borderHover: `1px solid ${borderStrong}`,
       borderFocus: `1px solid ${brand600}`,
-      boxShadowFocus: `0 0 0 2px ${brand600}40`,
+      boxShadowFocus: `0 0 0 2px ${withAlpha(brand600, 0.25)}`,
       heightMedium: token('--control-height', '44px'),
       heightLarge: token('--control-height-lg', '48px'),
       borderRadius: token('--radius-control', '8px'),

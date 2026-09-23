@@ -13,12 +13,16 @@ import { useTheme } from '@/theme/useTheme'
 import { useAuthStore } from '@/stores/auth'
 import { useLiveStore } from '@/stores/live'
 import { setUnauthorizedHandler } from '@/api'
+import { useScrollableRegions } from '@/composables/useScrollableRegions'
 
 const auth = useAuthStore()
 const live = useLiveStore()
 const route = useRoute()
 const router = useRouter()
 const { isDark, toggle: toggleTheme } = useTheme()
+
+// Keep horizontally scrollable tables reachable by keyboard.
+useScrollableRegions()
 
 const themeOverrides = ref(buildThemeOverrides())
 // Naive UI needs concrete colours, so rebuild them whenever the theme flips.

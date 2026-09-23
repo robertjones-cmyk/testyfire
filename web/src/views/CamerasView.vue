@@ -11,13 +11,26 @@ import { useLiveStore } from '@/stores/live'
 const live = useLiveStore()
 const openCameraKey = ref<string | null>(null)
 
-const groups = computed(() =>
-  Object.entries(live.camerasByFeed).map(([feedId, cameras]) => ({
-    feedId,
-    cameras,
-    health: live.feeds[feedId] ?? null,
-  })),
-)
+/**
+ * Groups include feeds that returned NO cameras.
+ *
+ * Without this, a feed that is failing outright simply vanishes from this
+ * screen, which is the exact case an operator most needs to see — a broken
+ * feed looks identical to a feed nobody configured.
+ */
+const groups = computed(() => {
+  const byFeed = live.camerasByFeed
+  const feedIds = new Set([...Object.keys(byFeed), ...Object.keys(live.feeds)])
+  return [...feedIds]
+    .map((feedId) => ({
+      feedId,
+      cameras: byFeed[feedId] ?? [],
+      health: live.feeds[feedId] ?? null,
+    }))
+    // A disabled feed with no cameras is not news; a failing one is.
+    .filter((group) => group.cameras.length > 0 || group.health?.enabled)
+    .sort((a, b) => a.feedId.localeCompare(b.feedId))
+})
 
 function frameTime(ts?: string | null) {
   return ts ? new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : 'never'
@@ -41,9 +54,17 @@ function frameTime(ts?: string | null) {
         </span>
       </header>
 
-      <p v-if="group.health?.last_error" class="feed-error">{{ group.health.last_error }}</p>
+      <p v-if="group.health?.last_error" class="feed-error" role="status">
+        <TorchIcon name="alert-triangle" :size="14" />
+        {{ group.health.last_error }}
+      </p>
 
-      <ul class="grid">
+      <p v-if="!group.cameras.length" class="feed-empty">
+        This feed returned no cameras. Check the error above, then run
+        <code>python -m feeds test {{ group.feedId }}</code> to diagnose it.
+      </p>
+
+      <ul v-else class="grid">
         <li v-for="camera in group.cameras" :key="camera.key">
           <button type="button" class="camera-card" @click="openCameraKey = camera.key">
             <span class="camera-card__thumb">
@@ -91,7 +112,11 @@ function frameTime(ts?: string | null) {
   color: var(--color-text-body); border-radius: var(--radius-tag);
   font-size: 11px; font-weight: 700; padding: 2px 8px; text-transform: uppercase;
 }
+.feed-empty {
+  font-size: 13px; color: var(--color-text-muted); margin: 12px 0 0;
+}
 .feed-error {
+  display: flex; align-items: center; gap: 6px;
   font-size: 12px; color: var(--color-warning-text); font-weight: 600;
   background: var(--color-surface-sunken); border-radius: var(--radius-control);
   padding: 8px 10px; margin: 8px 0 0;

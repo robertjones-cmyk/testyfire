@@ -8,13 +8,15 @@ import { api, type BlindSpotSummary } from '@/api'
 
 interface CameraMetric {
   camera_name: string; feed_id: string; frames_ingested: number; frames_failed: number
-  view_changes: number; possible_smoke_alerts: number; verified_alerts: number
+  view_changes: number; possible_smoke_alerts: number; still_possible_smoke: number
+  verified_alerts: number
   marked_false_alarm: number; marked_real: number; avg_inference_ms: number
   avg_cost_per_frame_usd: number; total_cost_usd: number; red: boolean; red_reasons: string[]
 }
 interface Totals {
   day: string; cameras: number; frames_ingested: number; frames_failed: number
-  view_changes: number; possible_smoke_alerts: number; verified_alerts: number
+  view_changes: number; possible_smoke_alerts: number; still_possible_smoke: number
+  verified_alerts: number
   sensor_only_alerts: number; marked_false_alarm: number; false_alarm_rate: number
   avg_cost_per_frame_usd: number; total_cost_usd: number; cost_target_usd: number
   red_cameras: string[]
@@ -52,7 +54,8 @@ const columns = computed<DataTableColumns<CameraMetric>>(() => [
   { title: 'Frames', key: 'frames_ingested', width: 90 },
   { title: 'Failed', key: 'frames_failed', width: 90 },
   { title: 'View changes', key: 'view_changes', width: 120 },
-  { title: 'Possible smoke', key: 'possible_smoke_alerts', width: 140 },
+  { title: 'Camera alerts', key: 'possible_smoke_alerts', width: 130 },
+  { title: 'Still possible', key: 'still_possible_smoke', width: 130 },
   { title: 'False alarms', key: 'marked_false_alarm', width: 120 },
   { title: 'Verified', key: 'verified_alerts', width: 100 },
   {
@@ -89,9 +92,11 @@ function rowClass(row: CameraMetric) {
             <span class="kpi__meta">{{ totals?.frames_failed ?? 0 }} failed</span>
           </li>
           <li class="card kpi">
-            <span class="kpi__label">Possible smoke</span>
+            <span class="kpi__label">Camera alerts raised</span>
             <span class="kpi__value">{{ totals?.possible_smoke_alerts ?? 0 }}</span>
-            <span class="kpi__meta">dashboard only — never dispatched</span>
+            <span class="kpi__meta">
+              {{ totals?.still_possible_smoke ?? 0 }} still possible smoke — never dispatched
+            </span>
           </li>
           <li class="card kpi">
             <span class="kpi__label">Verified</span>

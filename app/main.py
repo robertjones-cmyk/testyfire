@@ -78,7 +78,13 @@ def create_app() -> FastAPI:
     )
 
     _, exposed = resolve_host()
-    app.add_middleware(SecurityHeadersMiddleware, https=exposed)
+    # The CSP keeps script-src 'self' and allows the one inline theme-bootstrap
+    # script by hash, computed from the built index.html being served.
+    app.add_middleware(
+        SecurityHeadersMiddleware,
+        https=exposed,
+        index_html=(WEB_DIST / "index.html") if (WEB_DIST / "index.html").is_file() else None,
+    )
     app.add_middleware(
         CORSMiddleware,
         # Only the frontend's own origin. No wildcards.

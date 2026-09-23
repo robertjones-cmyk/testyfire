@@ -258,8 +258,10 @@ Honest list. None are hidden.
    scripts, which is the more important half. Fixing it properly means
    extracting Naive UI's styles at build time or adopting nonces.
 2. **One inline `<script>` in `index.html`** sets the theme before first paint
-   to avoid a flash of the wrong theme. It contains no user data. It should
-   carry a CSP hash in a production build.
+   to avoid a flash of the wrong theme. It is allowed by a **SHA-256 hash
+   computed at startup from the built `index.html` being served**, so
+   `script-src` stays `'self'` with no `'unsafe-inline'`, and editing the script
+   cannot silently break the policy or silently widen it.
 3. **DNS rebinding (TOCTOU).** The SSRF guard resolves a hostname, validates
    every address, and then makes the request — during which DNS could change.
    Closing this needs connecting to the validated IP with SNI pinned, which

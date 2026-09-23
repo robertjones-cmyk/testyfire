@@ -36,8 +36,9 @@ const scopeOptions = [
     </div>
 
     <div class="sidebar__scope">
-      <label class="sidebar__scope-label" for="asset-scope">Assets</label>
-      <NSelect id="asset-scope" v-model:value="scope" :options="scopeOptions" size="medium" />
+      <span class="sidebar__scope-label" id="asset-scope-label">Assets</span>
+      <NSelect v-model:value="scope" :options="scopeOptions" size="medium"
+        aria-labelledby="asset-scope-label" />
     </div>
 
     <ul class="sidebar__list">

@@ -207,7 +207,7 @@ blind-spot map and the sensor count.
 ## Tests
 
 ```bash
-python -m pytest                                    # 159 backend tests
+python -m pytest                                    # 160 backend tests
 python scripts/check_contrast.py                    # WCAG contrast on every token pair
 cd web && npm run test:a11y                         # axe-core on every screen, both themes
 ```
@@ -217,6 +217,10 @@ the dispatch rule), view-change detection, SSRF, path traversal, credential
 redaction, auth (401/403 on every route), CSRF, login rate limiting, dispatch
 signing, blind-spot arithmetic, and a fake-adapter test proving a new feed type
 flows through the whole pipeline untouched.
+
+Current state: **160 backend tests pass**, **42/42 contrast pairs pass in both
+themes**, and **20/20 accessibility tests pass** (axe-core on every screen in
+both themes, plus structural checks).
 
 Security and accessibility details: [`SECURITY.md`](SECURITY.md),
 [`ACCESSIBILITY.md`](ACCESSIBILITY.md).

@@ -53,9 +53,15 @@ def per_camera_day(config, day: str | None = None) -> list[dict[str, Any]]:
             "SELECT COUNT(*) AS n FROM ingest_failures WHERE camera_key = ? AND ts >= ? AND ts < ?",
             (key, low, high),
         )
+        # `possible_smoke_alerts` counts every alert this CAMERA raised, including
+        # ones later upgraded to verified. Every camera alert starts life as
+        # possible_smoke, and the kill criterion is about how much a human had to
+        # triage — counting only the ones still sitting at possible_smoke would
+        # quietly under-report exactly the number we are trying to judge.
         events = db.query_one(
             "SELECT"
-            "  COALESCE(SUM(status = 'possible_smoke'), 0) AS possible,"
+            "  COUNT(*) AS possible,"
+            "  COALESCE(SUM(status = 'possible_smoke'), 0) AS still_possible,"
             "  COALESCE(SUM(status = 'verified'), 0) AS verified,"
             "  COALESCE(SUM(human_label = 'false_alarm'), 0) AS false_alarms,"
             "  COALESCE(SUM(human_label = 'real'), 0) AS real_alarms"
@@ -83,6 +89,7 @@ def per_camera_day(config, day: str | None = None) -> list[dict[str, Any]]:
             "frames_failed": int(failures["n"]) if failures else 0,
             "view_changes": view_changes,
             "possible_smoke_alerts": int(events["possible"]) if events else 0,
+            "still_possible_smoke": int(events["still_possible"]) if events else 0,
             "verified_alerts": int(events["verified"]) if events else 0,
             "marked_false_alarm": false_alarms,
             "marked_real": int(events["real_alarms"]) if events else 0,
@@ -101,6 +108,7 @@ def totals(config, day: str | None = None) -> dict[str, Any]:
     ingested = sum(r["frames_ingested"] for r in rows)
     cost = sum(r["total_cost_usd"] for r in rows)
     possible = sum(r["possible_smoke_alerts"] for r in rows)
+    still_possible = sum(r["still_possible_smoke"] for r in rows)
     false_alarms = sum(r["marked_false_alarm"] for r in rows)
     return {
         "day": day or today_utc(),
@@ -109,6 +117,7 @@ def totals(config, day: str | None = None) -> dict[str, Any]:
         "frames_failed": sum(r["frames_failed"] for r in rows),
         "view_changes": sum(r["view_changes"] for r in rows),
         "possible_smoke_alerts": possible,
+        "still_possible_smoke": still_possible,
         "verified_alerts": sum(r["verified_alerts"] for r in rows),
         "sensor_only_alerts": _sensor_only_count(day),
         "marked_false_alarm": false_alarms,
@@ -140,7 +149,8 @@ def _sensor_only_count(day: str | None) -> int:
 
 CSV_COLUMNS = [
     "day", "camera_key", "camera_name", "feed_id", "frames_ingested", "frames_failed",
-    "view_changes", "possible_smoke_alerts", "marked_false_alarm", "marked_real",
+    "view_changes", "possible_smoke_alerts", "still_possible_smoke",
+    "marked_false_alarm", "marked_real",
     "verified_alerts", "avg_inference_ms", "avg_cost_per_frame_usd", "total_cost_usd",
     "red", "red_reasons",
 ]

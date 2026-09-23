@@ -70,13 +70,18 @@ async function submit() {
       <form class="login__form" novalidate @submit.prevent="submit">
         <div class="field">
           <label class="field__label" for="login-email">Email</label>
+          <!-- The id MUST go through input-props: Naive UI puts a bare `id`
+               on its wrapper div, which leaves <label for> pointing at a
+               non-form element and the field effectively unlabelled. -->
           <NInput
-            id="login-email"
             v-model:value="email"
             type="text"
             size="large"
+            placeholder=""
             autocomplete="username"
             :input-props="{
+              id: 'login-email',
+              name: 'email',
               inputmode: 'email',
               'aria-describedby': fieldErrors.email ? 'login-email-error' : undefined,
               'aria-invalid': fieldErrors.email ? 'true' : undefined,
@@ -88,13 +93,15 @@ async function submit() {
         <div class="field">
           <label class="field__label" for="login-password">Password</label>
           <NInput
-            id="login-password"
             v-model:value="password"
             type="password"
             size="large"
+            placeholder=""
             show-password-on="click"
             autocomplete="current-password"
             :input-props="{
+              id: 'login-password',
+              name: 'password',
               'aria-describedby': fieldErrors.password ? 'login-password-error' : undefined,
               'aria-invalid': fieldErrors.password ? 'true' : undefined,
             }"

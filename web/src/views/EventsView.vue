@@ -191,26 +191,38 @@ watch(
       <h2 id="filters-heading" class="visually-hidden">Filters</h2>
       <div class="filters__grid">
         <div class="filter">
-          <label class="filter__label" for="filter-status">Status</label>
-          <NSelect id="filter-status" v-model:value="statusFilter" :options="statusOptions" clearable />
+          <span class="filter__label" id="filter-status-label">Status</span>
+          <NSelect v-model:value="statusFilter" :options="statusOptions" clearable
+            aria-labelledby="filter-status-label" />
         </div>
         <div class="filter">
-          <label class="filter__label" for="filter-severity">Severity</label>
-          <NSelect id="filter-severity" v-model:value="severityFilter" :options="severityOptions" clearable />
+          <span class="filter__label" id="filter-severity-label">Severity</span>
+          <NSelect v-model:value="severityFilter" :options="severityOptions" clearable
+            aria-labelledby="filter-severity-label" />
         </div>
         <div class="filter">
-          <label class="filter__label" for="filter-category">Category</label>
-          <NSelect id="filter-category" v-model:value="categoryFilter" :options="categoryOptions" clearable />
+          <span class="filter__label" id="filter-category-label">Category</span>
+          <NSelect v-model:value="categoryFilter" :options="categoryOptions" clearable
+            aria-labelledby="filter-category-label" />
         </div>
         <div class="filter">
-          <label class="filter__label" for="filter-camera">Camera</label>
-          <NSelect id="filter-camera" v-model:value="cameraFilter" :options="cameraOptions" clearable filterable />
+          <span class="filter__label" id="filter-camera-label">Camera</span>
+          <!-- `filterable` renders an internal search <input>; aria-labelledby on
+               the wrapper does not reach it, so label it through input-props. -->
+          <NSelect
+            v-model:value="cameraFilter"
+            :options="cameraOptions"
+            clearable
+            filterable
+            aria-labelledby="filter-camera-label"
+            :input-props="{ 'aria-label': 'Filter by camera' }"
+          />
         </div>
         <div class="filter filter--pause">
-          <label class="filter__label" for="pause-live">Pause live updates</label>
+          <span class="filter__label" id="pause-live-label">Pause live updates</span>
           <NSwitch
-            id="pause-live"
             :value="live.paused"
+            aria-labelledby="pause-live-label"
             @update:value="live.setPaused($event as boolean)"
           />
           <span class="filter__hint">{{ live.paused ? 'Paused — the table will not move.' : 'Refreshing every 15s.' }}</span>

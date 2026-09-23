@@ -159,6 +159,31 @@ cd web && npm run test:a11y          # axe-core via Playwright
 Cameras, Dashboard, Settings — plus the Events drawer in its open state. CI
 fails on any `serious` or `critical` violation.
 
+Current result: **20/20 tests pass.**
+
+### Three real defects this suite caught
+
+Worth recording, because none was visible by eye and two broke the app outright:
+
+1. **The login fields had no accessible label — and did not render at all.**
+   Naive UI puts a bare `id` on its *wrapper div*, so `<label for="login-email">`
+   pointed at a non-form element and the input was unlabelled. Fixed by passing
+   the id through `input-props` so it lands on the real `<input>`. The same
+   pattern was wrong on every filter control; those now use `aria-labelledby`,
+   and the filterable select's internal search input is labelled through
+   `input-props`.
+2. **Every Naive UI component that does colour maths was throwing.** Our tokens
+   are authored in `oklch()`, which Naive UI's colour library cannot parse — it
+   threw "Invalid color value oklch(...)" and killed the render, which is *why*
+   the login inputs were missing. Tokens are now converted to `rgb()` before
+   being handed to `themeOverrides`, using the same maths as the contrast
+   checker.
+3. **The Dashboard's metrics table was not keyboard-scrollable.** Ten columns
+   scroll horizontally, and the scroll container was not focusable
+   (`scrollable-region-focusable`, WCAG 2.1.1) — a keyboard user simply could
+   not reach the right-hand columns. Scrollable regions are now made focusable
+   and labelled automatically.
+
 The Mapbox canvas itself is excluded from the scan (it is third-party and not
 keyboard-reachable by nature); the synced list panel that duplicates its
 contents **is** scanned, which is the part users actually need.
@@ -180,9 +205,10 @@ cd web && npm run build && cd .. && python -m app run
 npx lighthouse http://127.0.0.1:8000/events --only-categories=accessibility --view
 ```
 
-*Not yet run on this build* — it needs a Chrome that can talk to the network,
-which the build machine did not have. The axe-core suite covers the same rule
-set and is the gate in CI.
+*Not yet run on this build* — Lighthouse fetches its own resources at runtime
+and the build machine's network was restricted. The axe-core suite covers
+substantially the same rule set and is the gate in CI; run Lighthouse once on a
+normal network to confirm the score.
 
 ---
 
@@ -223,7 +249,8 @@ Honest list.
 1. **No screen-reader pass has been done.** The markup is built for it and axe
    is clean, but nobody has listened to it with VoiceOver or NVDA. This is the
    biggest gap.
-2. **No Lighthouse run on this build** (see above).
+2. **No Lighthouse run on this build** (see above). The axe-core suite passes,
+   which covers most of what Lighthouse's accessibility category checks.
 3. **Naive UI components are trusted, not audited.** They are used in their
    accessible modes and axe finds no serious violations, but the library's
    internals — particularly the data table's focus handling at 400% zoom — have

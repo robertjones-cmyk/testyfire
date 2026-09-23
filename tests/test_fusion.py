@@ -280,3 +280,26 @@ def test_sensor_only_wording_does_not_mention_a_camera(seeded, config):
 
     assert "from the camera" not in detail["confirmation_detail"]
     assert "TS-OUT" in detail["confirmation_detail"]
+
+
+def test_metrics_count_a_camera_alert_even_after_it_is_verified(seeded, config):
+    """The kill-criteria count must not shrink when an alert gets upgraded.
+
+    Every camera alert starts as possible_smoke. Counting only the ones still in
+    that state would under-report the triage load, which is the thing the kill
+    criteria exist to measure.
+    """
+    from app import metrics
+
+    engine = FusionEngine(config, dispatcher=RecordingDispatcher())
+    now = datetime.now(timezone.utc)
+    _add_reading("TS-IN", smoke=170.0, ts=now, thermal=12.0)
+    engine.on_frame_scored(
+        camera_key="feed__cam1", frame_id=_add_frame("feed__cam1", now),
+        score=0.8, bbox=None, view_changed=False, ts=now,
+    )
+
+    row = next(r for r in metrics.per_camera_day(config) if r["camera_key"] == "feed__cam1")
+    assert row["possible_smoke_alerts"] == 1, "the camera raised an alert; it still counts"
+    assert row["still_possible_smoke"] == 0, "but none is still awaiting corroboration"
+    assert row["verified_alerts"] == 1
