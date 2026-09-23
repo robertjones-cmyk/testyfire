@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+data/
+feed_test/
+node_modules/
+web/dist/
+web/.env.local
+.pytest_cache/
+test-results/
+playwright-report/
+*.db
