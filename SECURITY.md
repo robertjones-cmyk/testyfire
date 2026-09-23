@@ -225,7 +225,17 @@ Every outbound request from an adapter goes through `app/security/net.py`:
 
 * Python and npm dependencies are **pinned** (`requirements.txt`,
   `package-lock.json`).
-* CI runs `pip-audit` and `npm audit`.
+* CI runs `pip-audit --strict` and `npm audit`. A stale pin is treated as a real
+  finding rather than a nuisance — Pillow decodes untrusted camera images and
+  Starlette terminates every request, so their advisories land directly on this
+  codebase's attack surface. Refresh with: upgrade, run `pytest`, run
+  `pip-audit --requirement requirements.txt --strict`, re-pin from `pip freeze`.
+* **Secret scanning is never disabled wholesale.** `tests/test_security_feeds.py`
+  necessarily contains invented credentials — they are the inputs that prove
+  `redact()` strips them, so they have to look real. Those specific lines carry
+  inline `gitleaks:allow` annotations, and `.gitleaksignore` pins one historical
+  finding by commit-and-line fingerprint. Both are per-finding, so a genuine
+  secret committed anywhere else still fails the build.
 * **Model weights:** none are shipped. The ONNX slot downloads from a pinned URL
   and **verifies a SHA-256** before loading; a mismatch deletes the file and
   raises. It also refuses to load weights with no recorded licence. The default

@@ -13,7 +13,14 @@
  */
 import { onBeforeUnmount, onMounted } from 'vue'
 
-const SELECTOR = '.n-scrollbar-container, .n-data-table-base-table-body'
+// Naive UI uses several different scroll containers depending on the table's
+// state (an empty table renders `.n-virtual-list`, a populated one does not),
+// so all of them are covered rather than just the one visible at the time.
+const SELECTOR = [
+  '.n-scrollbar-container',
+  '.n-data-table-base-table-body',
+  '.n-virtual-list',
+].join(', ')
 
 function patch(root: ParentNode) {
   root.querySelectorAll<HTMLElement>(SELECTOR).forEach((element) => {

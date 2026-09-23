@@ -177,6 +177,14 @@ export function buildThemeOverrides(): GlobalThemeOverrides {
       tdPaddingMedium: '12px 16px',
     },
     Drawer: { color: surface, textColor: textBody },
+    // Naive UI's default empty-state text is ~3.5:1 on our dark surface, which
+    // fails AA. This state only renders when a table has no rows, so it is easy
+    // to miss locally with seeded data — CI caught it on a fresh database.
+    Empty: {
+      textColor: textMuted,
+      iconColor: textMuted,
+      extraTextColor: textMuted,
+    },
     Tabs: {
       tabTextColorActiveLine: token('--color-text-strong', primary),
       tabTextColorLine: textMuted,

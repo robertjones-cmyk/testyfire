@@ -148,6 +148,30 @@ test.describe('structure', () => {
     }
   })
 
+  test('the EMPTY table state is accessible too', async ({ page }) => {
+    // Regression guard: an empty table renders Naive UI's empty state, whose
+    // default text colour fails AA on our dark surface. Seeded local data hides
+    // this, so filter down to nothing and scan that state deliberately.
+    // Log in ONCE: a second call would navigate to /login while already
+    // authenticated, get redirected away, and never find the email field.
+    await login(page)
+
+    for (const theme of THEMES) {
+      await setTheme(page, theme)
+      await page.goto('/events')
+      await page.waitForLoadState('networkidle')
+
+      // Filter Category to Security. Every event this system raises is Fire, so
+      // the table is guaranteed empty whatever data happens to be present.
+      // Scoped to the filters card: the sidebar has a select too.
+      await page.locator('.filters .n-select').nth(2).click()
+      await page.getByText('Security', { exact: true }).click()
+
+      await expect(page.locator('.n-empty').first()).toBeVisible()
+      await scan(page, `Events empty state (${theme})`)
+    }
+  })
+
   test('live updates can be paused so the table does not move', async ({ page }) => {
     await login(page)
     await page.goto('/events')

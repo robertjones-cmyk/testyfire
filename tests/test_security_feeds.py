@@ -160,14 +160,19 @@ def test_safe_join_refuses_to_escape():
 # --------------------------------------------------------------------------- #
 # redaction
 # --------------------------------------------------------------------------- #
+# NOTE: every "credential" below is invented for this test. They are the inputs
+# to the redaction helper, so they have to LOOK like the real thing — which is
+# also why the secret scanner flags them. The `gitleaks:allow` annotations mark
+# these specific lines as known-fake rather than disabling the scanner, so a
+# genuine secret committed anywhere else still fails the build.
 @pytest.mark.parametrize("raw,must_not_contain", [
-    ("rtsp://admin:hunter2@10.0.0.5/stream1", "hunter2"),
-    ("https://user:s3cr3t@cam.example.com/jpg", "s3cr3t"),
-    ("https://api.example.com/x?api_key=AKIAIOSFODNN7EXAMPLE", "AKIAIOSFODNN7EXAMPLE"),
-    ("https://api.example.com/x?token=abc123def456", "abc123def456"),
-    ("Authorization: Bearer eyJhbGciOiJIUzI1NiIs", "eyJhbGciOiJIUzI1NiIs"),
-    ("key sk-ant-api03-SUPERSECRETVALUE here", "SUPERSECRETVALUE"),
-    ("mapbox sk.eyJ1IjoidGVzdCIsImEiOiJjbGFiY2RlZmcifQ.abc", "sk.eyJ1"),
+    ("rtsp://admin:hunter2@10.0.0.5/stream1", "hunter2"),  # gitleaks:allow
+    ("https://user:s3cr3t@cam.example.com/jpg", "s3cr3t"),  # gitleaks:allow
+    ("https://api.example.com/x?api_key=AKIAIOSFODNN7EXAMPLE", "AKIAIOSFODNN7EXAMPLE"),  # gitleaks:allow
+    ("https://api.example.com/x?token=abc123def456", "abc123def456"),  # gitleaks:allow
+    ("Authorization: Bearer eyJhbGciOiJIUzI1NiIs", "eyJhbGciOiJIUzI1NiIs"),  # gitleaks:allow
+    ("key sk-ant-api03-SUPERSECRETVALUE here", "SUPERSECRETVALUE"),  # gitleaks:allow
+    ("mapbox sk.eyJ1IjoidGVzdCIsImEiOiJjbGFiY2RlZmcifQ.abc", "sk.eyJ1"),  # gitleaks:allow
 ])
 def test_redaction_removes_credentials(raw, must_not_contain):
     assert must_not_contain not in redact(raw)

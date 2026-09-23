@@ -1,0 +1,10 @@
+# Fingerprints of findings that are known-fake, reviewed individually.
+#
+# These are NOT blanket exclusions: each line pins one finding in one commit at
+# one line. A real secret committed anywhere else still fails the build.
+#
+# tests/test_security_feeds.py feeds invented credentials to redact() to prove
+# it strips them. The strings have to look real for the test to mean anything.
+# The current version of the file carries inline `gitleaks:allow` annotations;
+# this fingerprint covers the commit made before they were added.
+0dd6c5d1d9304257a7f2f8786694bd88cd2c1816:tests/test_security_feeds.py:generic-api-key:167
