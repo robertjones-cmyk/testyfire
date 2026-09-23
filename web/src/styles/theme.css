@@ -1,0 +1,288 @@
+/* ==========================================================================
+   Torch UI system — the single source of truth for colour, type and shape.
+   These tokens are wired into Naive UI via src/theme/naiveOverrides.ts, so
+   every component (not just our own markup) uses them.
+   ========================================================================== */
+
+/* Manrope, self-hosted (variable font: one file covers 500/600/700). */
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url('/fonts/manrope-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500 700;
+  font-display: swap;
+  src: url('/fonts/manrope-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  /* --- brand ------------------------------------------------------------ */
+  --color-brand: oklch(68.38% .2092 37.3);          /* Torch orange, ~#FF5B24 */
+  --color-brand-hover: oklch(69.8% .1973 37.98);
+  --color-brand-600: oklch(56% .1955 34.9);          /* orange for TEXT on light */
+  --color-brand-100: oklch(91.38% .0462 39.79);
+  --color-brand-25: oklch(97% .0166 40.8);
+
+  --color-primary: oklch(20.99% .034 263.44);        /* near-black navy */
+
+  /* --- text ------------------------------------------------------------- */
+  --color-text-black: oklch(32.62% .0114 214.47);
+  --color-text-gray: oklch(36.95% .0381 260.5);
+  --color-text-gray-600: oklch(52.18% .021 209.44);
+  --color-text-gray-500: oklch(61.15% .025 210.43);
+
+  /* --- backgrounds ------------------------------------------------------ */
+  --color-background-primary: #fff;
+  --color-background-secondary: oklch(98.36% .0021 197.12);   /* page */
+  --color-background-tertiary: oklch(96.26% .0021 197.12);
+
+  /* --- grays ------------------------------------------------------------ */
+  --color-gray-25: oklch(98.36% .0021 197.12);
+  --color-gray-50: oklch(96% .0021 197.12);
+  --color-gray-100: oklch(92.52% .0045 214.33);
+  --color-gray-200: oklch(84.89% .0092 214.35);
+  --color-gray-300: oklch(77.1% .0141 214.38);
+  --color-gray-400: oklch(69.33% .0198 209.43);
+  --color-gray-700: oklch(42.56% .016 214.49);
+  --color-gray-900: oklch(29.03% .0117 214.51);
+  --color-gray-950: oklch(23.32% .0109 216.94);
+
+  /* --- status ----------------------------------------------------------- */
+  --color-success: oklch(67.31% .1596 155.59);
+  --color-warning: oklch(74.69% .1701 62.11);
+  --color-error: oklch(63.71% .2104 28.54);
+  --color-blue: oklch(67.46% .1414 261.34);
+
+  /* Accessible text variants. The raw status colours FAIL 4.5:1 as text on
+     white (success 2.8:1, warning 2.4:1), so text uses these darker shades
+     and the raw colour is reserved for fills, icons and chart marks. */
+  --color-success-text: oklch(44% .12 155.59);
+  --color-warning-text: oklch(46% .115 62.11);
+  --color-error-text: oklch(47% .18 28.54);
+  --color-blue-text: oklch(47% .13 261.34);
+
+  /* --- semantic roles --------------------------------------------------- */
+  --color-text-strong: var(--color-primary);
+  --color-text-body: var(--color-text-black);
+  --color-text-muted: var(--color-text-gray-600);   /* 5.4:1 — safe for text */
+  --color-text-link: var(--color-brand-600);        /* 5.1:1 — brand orange fails */
+  --color-border: var(--color-gray-200);
+  /* Input borders are UI components: they need 3:1, and gray-400 only reaches
+     2.7:1 on white (2.6:1 on the page). This is gray-400 darkened to clear the
+     bar — verified by scripts/check_contrast.py, which fails CI otherwise. */
+  --color-gray-450: oklch(63% .0198 209.43);
+  --color-border-strong: var(--color-gray-450);
+  --color-divider: var(--color-gray-100);
+  --color-surface: var(--color-background-primary);
+  --color-surface-sunken: var(--color-background-tertiary);
+  --color-page: var(--color-background-secondary);
+
+  --color-btn-primary-bg: var(--color-primary);
+  --color-btn-primary-text: #fff;
+
+  /* --- shape ------------------------------------------------------------ */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-pill: 999px;
+  --radius-tag: 4px;
+  --control-height: 44px;
+  --control-height-lg: 48px;
+
+  --shadow-card: 0 1px 2px oklch(0% 0 0 / 6%);
+  --shadow-float: 0 12px 16px -4px oklch(0% 0 0 / 8%), 0 4px 6px -2px oklch(0% 0 0 / 3%);
+
+  --focus-ring: 0 0 0 2px var(--color-background-primary), 0 0 0 4px var(--color-brand-600);
+
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-weight-normal: 500;
+  --font-weight-semibold: 600;   /* the default UI weight */
+  --font-weight-bold: 700;
+
+  --space-page: 32px;
+  --sidebar-width: 248px;
+}
+
+/* ==========================================================================
+   Dark theme
+   ========================================================================== */
+[data-theme='dark'] {
+  --color-background-primary: oklch(23.32% .0109 216.94);
+  --color-background-secondary: oklch(20.5% .011 216);
+  --color-background-tertiary: oklch(29.03% .0117 214.51);
+
+  --color-primary: oklch(96% .01 214);
+  --color-text-black: oklch(96% .01 214);
+  --color-text-gray: oklch(84% .012 214);
+  --color-text-gray-600: oklch(84% .012 214);
+  --color-text-gray-500: oklch(75% .014 214);
+
+  --color-border: oklch(35% .014 214);
+  --color-border-strong: oklch(52% .016 214);
+  --color-divider: oklch(32% .012 214);
+
+  --color-text-strong: oklch(96% .01 214);
+  --color-text-body: oklch(93% .01 214);
+  --color-text-muted: oklch(80% .013 214);
+  /* Brand orange reaches 5.4:1 on the dark surface, so it is fine for text here. */
+  --color-text-link: var(--color-brand);
+
+  /* Primary button flips to light-on-dark. */
+  --color-btn-primary-bg: oklch(94% .006 214);
+  --color-btn-primary-text: oklch(20.99% .034 263.44);
+
+  /* Status hues are unchanged; the text variants lighten for dark backgrounds. */
+  --color-success-text: oklch(78% .15 155.59);
+  --color-warning-text: oklch(82% .15 62.11);
+  --color-error-text: oklch(74% .18 28.54);
+  --color-blue-text: oklch(78% .13 261.34);
+
+  --shadow-card: 0 1px 3px oklch(0% 0 0 / 30%);
+  --shadow-float: 0 12px 16px -4px oklch(0% 0 0 / 40%), 0 4px 6px -2px oklch(0% 0 0 / 25%);
+
+  --focus-ring: 0 0 0 2px var(--color-background-primary), 0 0 0 4px var(--color-brand);
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #app { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-semibold);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-body);
+  background: var(--color-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  color: var(--color-text-strong);
+  font-weight: var(--font-weight-bold);
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+h1 { font-size: 24px; }
+h2 { font-size: 18px; }
+h3 { font-size: 16px; }
+
+p { margin: 0 0 12px; color: var(--color-text-body); }
+
+a { color: var(--color-text-link); }
+a:hover { text-decoration: underline; }
+
+/* Focus: 2px ring, >= 3:1, never removed. */
+:focus-visible {
+  outline: 2px solid transparent;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-control);
+}
+
+/* Skip link — first thing in the tab order. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -64px;
+  z-index: 3000;
+  padding: 12px 16px;
+  background: var(--color-surface);
+  color: var(--color-text-strong);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  font-weight: var(--font-weight-bold);
+  transition: top 120ms ease;
+}
+.skip-link:focus { top: 8px; }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- building blocks ------------------------------------------------- */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+}
+.card--float { box-shadow: var(--shadow-float); }
+
+.muted { color: var(--color-text-muted); }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; align-items: center; gap: 12px; }
+
+.logo-tile {
+  width: 48px; height: 48px;
+  border-radius: var(--radius-card);
+  background: var(--color-brand);
+  display: grid; place-items: center;
+  color: #fff;
+  flex: none;
+}
+
+/* Status chips: icon + text, never colour alone. Text uses the dark 600/700
+   shades so it clears 4.5:1 on the tinted chip background. */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: var(--font-weight-bold);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.chip--possible { background: var(--color-gray-100); color: var(--color-gray-900); border-color: var(--color-gray-300); }
+.chip--verified { background: oklch(94% .04 28.54); color: var(--color-error-text); border-color: oklch(80% .1 28.54); }
+.chip--sensor   { background: oklch(94% .05 62.11); color: var(--color-warning-text); border-color: oklch(80% .12 62.11); }
+.chip--demo     { background: oklch(93% .05 261.34); color: var(--color-blue-text); border-color: oklch(80% .1 261.34); }
+
+[data-theme='dark'] .chip--possible { background: oklch(32% .01 214); color: oklch(92% .01 214); border-color: oklch(45% .014 214); }
+[data-theme='dark'] .chip--verified { background: oklch(30% .07 28.54); color: var(--color-error-text); border-color: oklch(45% .12 28.54); }
+[data-theme='dark'] .chip--sensor   { background: oklch(30% .06 62.11); color: var(--color-warning-text); border-color: oklch(45% .1 62.11); }
+[data-theme='dark'] .chip--demo     { background: oklch(30% .06 261.34); color: var(--color-blue-text); border-color: oklch(45% .1 261.34); }
+
+.health-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  display: inline-block; flex: none;
+  border: 1px solid oklch(0% 0 0 / 25%);
+}
+.health-dot--ok { background: var(--color-success); }
+.health-dot--bad { background: var(--color-error); }
+.health-dot--unknown { background: var(--color-gray-300); }
+
+/* --- motion ----------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- narrow / zoomed layouts ------------------------------------------ */
+@media (max-width: 860px) {
+  :root { --space-page: 16px; --sidebar-width: 100%; }
+}

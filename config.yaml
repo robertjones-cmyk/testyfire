@@ -1,0 +1,232 @@
+# Torch Camera Fusion (Prototype) — main configuration.
+#
+# SECRETS NEVER GO IN THIS FILE. Anything sensitive is referenced by the name of
+# an environment variable (*_env keys) and read at runtime. See .env.example.
+
+app:
+  name: "Torch Camera Fusion (Prototype)"
+  # Backend binds to loopback unless HOST env var is explicitly set (see SECURITY.md).
+  port: 8000
+  data_dir: "./data"
+  # Base URL used in dispatch payload links. The API serves the built frontend,
+  # so this is the API's own origin, not the Vite dev server.
+  base_link: "http://127.0.0.1:8000"
+  db_path: "./data/torch.db"
+  frames_dir: "./data/frames"
+  # Origin(s) allowed by CORS. The dev frontend runs on 5173.
+  frontend_origins: ["http://127.0.0.1:5173", "http://localhost:5173"]
+  session:
+    absolute_timeout_minutes: 480   # 8 hours
+    idle_timeout_minutes: 30
+    idle_warning_seconds: 120       # warning dialog 2 minutes before idle logout
+  login_rate_limit:
+    max_failures: 5
+    window_minutes: 15
+
+retention:
+  frames_hours: 48
+  logs_days: 30
+  # Frames attached to a confirmed (verified / sensor_only) event are kept with
+  # the event and deleted with it, regardless of frames_hours.
+
+# ---------------------------------------------------------------------------
+# FEEDS — each entry picks a registered adapter by `type`.
+# Adding a camera source = one config block (+ one new file only for a new type).
+# See docs/ADDING_A_FEED.md
+# ---------------------------------------------------------------------------
+feeds:
+  - id: nmdot_abq
+    type: nmdot
+    enabled: true
+    interval_s: 120
+    # NMDOT publishes a public camera list; we keep only river-facing cameras.
+    url: "https://servicev4.nmroads.com/RealMapWAR/GetCameraInfo"
+    snapshot_base: "https://ss.nmroads.com/snapshots/"
+    filter:
+      name_contains: ["RioGrande", "riogrande", "riobravo", "rio_bravo", "Coors", "coors"]
+    # Optional explicit override of the JSON field names. Leave empty to use the
+    # built-in alias resolver, then run `python -m feeds inspect nmdot_abq` to see
+    # the real keys the server returned and pin them here.
+    field_map: {}
+
+  - id: abq_city_axis
+    type: snapshot_url
+    enabled: false
+    interval_s: 120
+    cameras:
+      - {id: cam1, name: "Example Axis Camera", url: "http://HOST/axis-cgi/jpg/image.cgi", lat: 35.08, lon: -106.65, heading: 270, fov: 60}
+    auth: {type: digest, username_env: ABQ_CAM_USER, password_env: ABQ_CAM_PASS}
+
+  - id: site_rtsp
+    type: rtsp
+    enabled: false
+    interval_s: 300
+    # Customer cameras usually live on a private LAN: that requires opt-in.
+    allow_private_network: true
+    cameras:
+      - {id: tower1, name: "Watchtower 1", url_env: TOWER1_RTSP_URL, lat: 0, lon: 0, mast_height: 7.6, heading: 0, fov: 360}
+
+  - id: site_hls
+    type: hls
+    enabled: false
+    interval_s: 300
+    cameras:
+      - {id: hls1, name: "Example HLS", url_env: SITE1_HLS_URL, lat: 35.08, lon: -106.65, heading: 180, fov: 70}
+
+  # Offline demo / replay feed. Enabled so the prototype runs with no network.
+  - id: demo_local
+    type: local_folder
+    enabled: true
+    interval_s: 120
+    folder: "./data/replay"
+    cameras:
+      - {id: bosque_n,  name: "Bosque North (replay)",    subdir: "bosque_n",  lat: 35.1758, lon: -106.6720, heading: 200, fov: 62, mast_height: 12}
+      - {id: bosque_c,  name: "Bosque Central (replay)",  subdir: "bosque_c",  lat: 35.1002, lon: -106.6817, heading: 170, fov: 62, mast_height: 12}
+      - {id: bosque_s,  name: "Bosque South (replay)",    subdir: "bosque_s",  lat: 35.0107, lon: -106.6470, heading: 300, fov: 62, mast_height: 12}
+
+  - id: verkada_org
+    type: verkada
+    enabled: false
+    interval_s: 120
+    org_id_env: VERKADA_ORG_ID
+    api_key_env: VERKADA_API_KEY
+
+# Geometry overrides applied to cameras after the adapter lists them.
+# Feeds rarely publish heading/FOV, and the fusion + blind-spot map need them.
+# Key is "<feed_id>:<camera_id>" or a case-insensitive camera-name substring.
+camera_overrides:
+  "name:i-40riogrande":  {lat: 35.1002, lon: -106.6817, heading: 175, fov: 60, mast_height: 12, is_ptz: true}
+  "name:pdnw-riogrande": {lat: 35.1758, lon: -106.6733, heading: 250, fov: 60, mast_height: 12, is_ptz: true}
+  "name:pdnriogrande":   {lat: 35.1755, lon: -106.6690, heading: 100, fov: 60, mast_height: 12, is_ptz: true}
+  "name:riobravo":       {lat: 35.0107, lon: -106.6470, heading: 290, fov: 60, mast_height: 12, is_ptz: true}
+  "name:coors":          {heading: 90, fov: 60, mast_height: 12, is_ptz: true}
+
+detection:
+  detector: baseline            # baseline | onnx
+  score_threshold: 0.55         # above this -> possible_smoke event
+  sky_region_fraction: 0.55     # top fraction of the frame treated as sky/horizon
+  onnx:
+    # Optional permissively-licensed ONNX smoke model. Disabled by default;
+    # weights are fetched from a pinned URL and the SHA-256 must match.
+    enabled: false
+    url: ""
+    sha256: ""
+    license: ""
+    input_size: 640
+  vision_llm:
+    enabled: false              # OFF by default. Costs money — ask before enabling.
+    model: "claude-sonnet-5"
+    api_key_env: ANTHROPIC_API_KEY
+    escalate_above: 0.45        # only frames the baseline scores above this
+    max_calls_per_hour: 20
+    monthly_spend_cap_usd: 5.00
+    crop_to_roi: true           # strip EXIF + crop to region of interest before sending
+    input_cost_per_mtok: 3.00
+    output_cost_per_mtok: 15.00
+
+view_change:
+  # PTZ operators move these cameras; a moved view is not a smoke event.
+  phash_distance_threshold: 14  # perceptual-hash Hamming distance
+  ssim_threshold: 0.55          # structural similarity below this = view changed
+  stable_frames_to_adopt: 3     # adopt new reference after N stable frames
+
+fusion:
+  view_range_m: 1500            # assumed camera view distance
+  sensor_match_radius_m: 400    # sensor counts if inside cone OR within this radius
+  time_window_minutes: 10       # +/- window for sensor corroboration
+  dedupe_minutes: 30            # reuse an open event for the same camera within this window
+  unknown_heading_is_360: true  # cameras with no heading get a 360 disc (flagged in UI)
+
+sensors:
+  source: mock                  # mock | torch_api
+  emit_interval_s: 60
+  thresholds:
+    smoke_index: 60.0           # PM2.5+VOC composite 0-500
+    thermal_delta_c: 8.0        # hotspot delta over ambient
+  mock:
+    # Virtual Torch sensors along the Rio Grande bosque near the cameras.
+    sensors:
+      - {id: TS-001, name: "Bosque N 1", lat: 35.1780, lon: -106.6755}
+      - {id: TS-002, name: "Bosque N 2", lat: 35.1700, lon: -106.6790}
+      - {id: TS-003, name: "Bosque C 1", lat: 35.1120, lon: -106.6800}
+      - {id: TS-004, name: "Bosque C 2", lat: 35.1005, lon: -106.6830}
+      - {id: TS-005, name: "Bosque C 3", lat: 35.0880, lon: -106.6820}
+      - {id: TS-006, name: "Bosque S 1", lat: 35.0450, lon: -106.6790}
+      - {id: TS-007, name: "Bosque S 2", lat: 35.0120, lon: -106.6500}
+      - {id: TS-008, name: "Bosque S 3", lat: 35.0000, lon: -106.6830}
+    fire_scenario:
+      sensor_id: "TS-004"       # ramped by the "Run fire scenario" button
+      ramp_minutes: 6
+
+blind_spot:
+  mast_height_m: 10.0           # default camera mast height
+  dem:
+    provider: terrarium         # AWS Terrain Tiles (public, no auth)
+    url_template: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
+    zoom: 12
+    cache_dir: "./data/dem"
+    # Synthetic DEM fallback keeps the viewshed runnable with no network.
+    allow_synthetic_fallback: true
+  grid_spacing_m: 80            # viewshed sample spacing
+  sensor:
+    coverage_acres: 10.0
+    radius_m: 113.0
+    unit_cost_usd: 299
+  max_proposed_sensors: 1200    # placement stops here; the summary says so when it bites
+  # Area of interest: Rio Grande bosque corridor through Albuquerque.
+  area_of_interest:
+    name: "Rio Grande Bosque Corridor — Albuquerque"
+    polygon:
+      - [-106.6500, 35.1960]
+      - [-106.6570, 35.1750]
+      - [-106.6650, 35.1550]
+      - [-106.6730, 35.1000]
+      - [-106.6720, 35.0800]
+      - [-106.6690, 35.0500]
+      - [-106.6770, 35.0100]
+      - [-106.6900, 34.9950]
+      - [-106.7000, 34.9950]
+      - [-106.6930, 35.0110]
+      - [-106.6850, 35.0500]
+      - [-106.6880, 35.0800]
+      - [-106.6890, 35.1000]
+      - [-106.6810, 35.1550]
+      - [-106.6730, 35.1750]
+      - [-106.6660, 35.1960]
+  # Placement priority: proposed sensors closest to these lines score higher.
+  river_centerline:
+    - [-106.6535, 35.1960]
+    - [-106.6610, 35.1750]
+    - [-106.6690, 35.1550]
+    - [-106.6770, 35.1000]
+    - [-106.6800, 35.0800]
+    - [-106.6770, 35.0500]
+    - [-106.6850, 35.0100]
+    - [-106.6950, 34.9950]
+  roads:
+    - [[-106.7100, 35.1004], [-106.6500, 35.1002]]   # I-40 corridor
+    - [[-106.6900, 35.1755], [-106.6400, 35.1758]]   # Paseo del Norte
+    - [[-106.6900, 35.0107], [-106.6300, 35.0107]]   # Rio Bravo
+
+dispatch:
+  # Only `verified` and `sensor_only` events are ever dispatched. Product rule.
+  enabled: false                # admin must set a URL first
+  url: ""                       # HTTPS required, except the local test receiver
+  secret_env: DISPATCH_HMAC_SECRET
+  timeout_s: 10
+  max_retries: 4
+  local_test_receiver:
+    enabled: true
+    url: "http://127.0.0.1:8001/dispatch-test"
+
+kill_criteria:
+  max_false_alarms_per_camera_per_day: 3
+  max_view_changes_per_camera_per_day: 10
+  target_cost_per_frame_usd: 0.001
+
+map:
+  style: "mapbox://styles/mapbox/standard"
+  # Swap in the Torch custom style here when available.
+  # style: "mapbox://styles/torchsystems/xxxxxxxx"
+  center: [-106.6750, 35.0900]
+  zoom: 11

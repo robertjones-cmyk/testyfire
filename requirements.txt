@@ -1,0 +1,46 @@
+# Runtime dependencies — pinned.
+#
+# These are kept current because `pip-audit --strict` runs in CI and a stale pin
+# is a real finding, not a nuisance: Pillow in particular decodes untrusted
+# camera images (see SECURITY.md), so its advisories matter to this codebase
+# directly.
+#
+# To refresh: upgrade, run `pytest`, run `pip-audit --requirement requirements.txt
+# --strict`, then re-pin from `pip freeze`.
+
+# --- web ---
+fastapi==0.141.1
+starlette==1.6.0
+uvicorn==0.53.0
+h11==0.16.0
+
+# --- validation ---
+pydantic==2.13.5
+pydantic_core==2.46.5
+annotated-types==0.7.0
+annotated-doc==0.0.5
+typing_extensions==4.16.0
+email-validator==2.3.0
+dnspython==2.8.0
+
+# --- http client (feed fetching) ---
+httpx==0.28.1
+httpcore==1.0.9
+certifi==2026.7.22
+idna==3.20
+anyio==4.15.1
+sniffio==1.3.1
+
+# --- imaging and maths ---
+Pillow==12.3.0
+numpy==2.4.6
+
+# --- auth ---
+argon2-cffi==25.1.0
+argon2-cffi-bindings==21.2.0
+cffi==1.17.1
+pycparser==2.22
+
+# --- config and CLI ---
+PyYAML==6.0.3
+click==8.5.0

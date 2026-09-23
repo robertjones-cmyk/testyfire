@@ -1,0 +1,32 @@
+<!doctype html>
+<!-- lang is set (the real Torch app ships lang=""), and the viewport allows
+     zooming (the real app sets maximum-scale=1, user-scalable=no). Both are
+     deliberate departures — see ACCESSIBILITY.md. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="Torch Camera Fusion — internal prototype" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <title>Torch Camera Fusion (Prototype)</title>
+    <script>
+      // Set the theme before first paint so there is no flash of the wrong one.
+      // Inlined deliberately; the CSP allows it via a hash in production builds.
+      (function () {
+        try {
+          var stored = localStorage.getItem('app-theme');
+          var theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
