@@ -202,6 +202,11 @@ system up, show live frames, trigger the fire scenario, watch an alert go from
 *possible smoke* to *verified* and hit the dispatch webhook, then show the
 blind-spot map and the sensor count.
 
+For showing someone who will not run the stack,
+[`prototype/torch-camera-fusion.html`](prototype/torch-camera-fusion.html) is a
+single self-contained HTML file — open it in a browser, press **Run fire
+scenario**, and the same story plays out against mock state.
+
 ---
 
 ## Tests
